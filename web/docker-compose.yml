@@ -1,0 +1,20 @@
+services:
+  frontend:
+    build:
+      context: .
+    container_name: aetheria-frontend-app
+    ports:
+      - '3001:80'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - LIVENESS_PATH=/health
+      - READINESS_PATH=/ready
+    env_file:
+      - .env
+    healthcheck:
+      # check nginx root /health (container listens on 80)
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost${LIVENESS_PATH:-/health} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
