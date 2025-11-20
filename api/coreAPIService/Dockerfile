@@ -1,29 +1,33 @@
-# Stage 1: Build/Install dependencies
-FROM node:20-alpine AS development
-
-WORKDIR /app
-
-# Copy package.json and package-lock.json (if exists)
-COPY package*.json ./
-
-# Install dependencies
-RUN npm install
-
-# Stage 2: Production-ready image
+# Stage 1: Base image for minimal core API service
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Copy necessary files from the development stage
-COPY --from=development /app/node_modules ./node_modules
-COPY . .
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
-# Set the environment to production
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy application files
+COPY --chown=nodejs:nodejs . .
+
+# Set environment to production
 ENV NODE_ENV=production
 
-# Expose the port your Express app runs on (default is often 3000 or 8080)
+# Switch to non-root user
+USER nodejs
+
+# Expose the port
 EXPOSE 3000
 
-# Command to start the application using the "start" script
-# Note: Since nodemon is only for development, the index.js is started directly for production
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+# Start the application
 CMD ["node", "index.js"]
