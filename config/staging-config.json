@@ -1,0 +1,83 @@
+{
+  "environment": "staging",
+  "services": {
+    "auth": {
+      "url": "https://auth-staging.aetheria.com",
+      "healthPath": "/health",
+      "healthAuth": true
+    },
+    "streaming": {
+      "url": "https://streaming-staging.aetheria.com",
+      "healthPath": "/health", 
+      "healthAuth": true
+    },
+    "coreapi": {
+      "url": "https://api-staging.aetheria.com",
+      "healthPath": "/health",
+      "healthAuth": true
+    },
+    "chat": {
+      "url": "https://chat-staging.aetheria.com",
+      "healthPath": "/health",
+      "healthAuth": true
+    }
+  },
+  "ui": {
+    "url": "https://staging.aetheria.com",
+    "origin": "https://staging.aetheria.com"
+  },
+  "security": {
+    "healthCheckToken": "${HEALTH_CHECK_TOKEN}",
+    "requireSSL": true
+  },
+  "dns": {
+    "records": [
+      {
+        "name": "auth-staging.aetheria.com",
+        "type": "A",
+        "value": "${ALB_IP_ADDRESS}"
+      },
+      {
+        "name": "streaming-staging.aetheria.com", 
+        "type": "A",
+        "value": "${ALB_IP_ADDRESS}"
+      },
+      {
+        "name": "api-staging.aetheria.com",
+        "type": "A", 
+        "value": "${ALB_IP_ADDRESS}"
+      },
+      {
+        "name": "chat-staging.aetheria.com",
+        "type": "A",
+        "value": "${ALB_IP_ADDRESS}"
+      },
+      {
+        "name": "staging.aetheria.com",
+        "type": "CNAME",
+        "value": "${CLOUDFRONT_DOMAIN}"
+      }
+    ]
+  },
+  "loadBalancer": {
+    "url": "${ALB_DNS_NAME}",
+    "healthPath": "/health"
+  },
+  "monitoring": {
+    "endpoints": [
+      {
+        "name": "CloudWatch",
+        "url": "${CLOUDWATCH_ENDPOINT}/health"
+      },
+      {
+        "name": "Application Insights", 
+        "url": "${APP_INSIGHTS_ENDPOINT}/health"
+      }
+    ]
+  },
+  "timeouts": {
+    "health": 30,
+    "cors": 10,
+    "ssl": 15
+  }
+}

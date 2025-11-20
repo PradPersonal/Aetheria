@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Frontend Web Service
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      # Runtime environment injection
+      - REACT_APP_API_URL=http://localhost:3001/api
+      - REACT_APP_STREAMING_URL=http://localhost:3002/api
+      - REACT_APP_CHAT_URL=http://localhost:3003/api
+      - REACT_APP_CORE_API_URL=http://localhost:3004/api
+      - REACT_APP_WS_URL=ws://localhost:3003
+      - REACT_APP_APP_NAME=Aetheria
+      - REACT_APP_VERSION=1.0.0
+      - REACT_APP_ENVIRONMENT=production
+      - REACT_APP_ENABLE_CHAT=true
+      - REACT_APP_ENABLE_ANALYTICS=false
+      - REACT_APP_ENABLE_DEBUG=false
+    depends_on:
+      - auth-service
+      - streaming-service
+      - chat-service
+      - core-api-service
+    networks:
+      - aetheria-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Production example with external URLs
+  # web-prod:
+  #   build: 
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "80:80"
+  #   environment:
+  #     - REACT_APP_API_URL=https://api.yourdomain.com/api
+  #     - REACT_APP_STREAMING_URL=https://streaming.yourdomain.com/api
+  #     - REACT_APP_CHAT_URL=https://chat.yourdomain.com/api
+  #     - REACT_APP_CORE_API_URL=https://core.yourdomain.com/api
+  #     - REACT_APP_WS_URL=wss://chat.yourdomain.com
+  #     - REACT_APP_ENVIRONMENT=production
+  #     - REACT_APP_ENABLE_ANALYTICS=true
+  #     - REACT_APP_ANALYTICS_ID=GA-XXXXXXXXX
+
+networks:
+  aetheria-network:
+    driver: bridge

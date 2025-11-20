@@ -1,0 +1,109 @@
+{
+  "environment": "production",
+  "services": {
+    "auth": {
+      "url": "https://auth.aetheria.com",
+      "healthPath": "/health",
+      "healthAuth": true
+    },
+    "streaming": {
+      "url": "https://streaming.aetheria.com",
+      "healthPath": "/health",
+      "healthAuth": true
+    },
+    "coreapi": {
+      "url": "https://api.aetheria.com", 
+      "healthPath": "/health",
+      "healthAuth": true
+    },
+    "chat": {
+      "url": "https://chat.aetheria.com",
+      "healthPath": "/health",
+      "healthAuth": true
+    }
+  },
+  "ui": {
+    "url": "https://aetheria.com",
+    "origin": "https://aetheria.com"
+  },
+  "security": {
+    "healthCheckToken": "${HEALTH_CHECK_TOKEN}",
+    "requireSSL": true,
+    "enforceSTS": true,
+    "requireSecurityHeaders": true
+  },
+  "dns": {
+    "records": [
+      {
+        "name": "auth.aetheria.com",
+        "type": "A",
+        "value": "${PROD_ALB_IP_ADDRESS}"
+      },
+      {
+        "name": "streaming.aetheria.com",
+        "type": "A", 
+        "value": "${PROD_ALB_IP_ADDRESS}"
+      },
+      {
+        "name": "api.aetheria.com",
+        "type": "A",
+        "value": "${PROD_ALB_IP_ADDRESS}"
+      },
+      {
+        "name": "chat.aetheria.com",
+        "type": "A",
+        "value": "${PROD_ALB_IP_ADDRESS}"
+      },
+      {
+        "name": "aetheria.com",
+        "type": "A", 
+        "value": "${PROD_CLOUDFRONT_IP}"
+      },
+      {
+        "name": "www.aetheria.com",
+        "type": "CNAME",
+        "value": "aetheria.com"
+      }
+    ]
+  },
+  "loadBalancer": {
+    "url": "${PROD_ALB_DNS_NAME}",
+    "healthPath": "/health"
+  },
+  "monitoring": {
+    "endpoints": [
+      {
+        "name": "CloudWatch", 
+        "url": "${PROD_CLOUDWATCH_ENDPOINT}/health"
+      },
+      {
+        "name": "DataDog",
+        "url": "${DATADOG_ENDPOINT}/health"
+      },
+      {
+        "name": "New Relic",
+        "url": "${NEWRELIC_ENDPOINT}/health"
+      }
+    ]
+  },
+  "cdn": {
+    "cloudfront": {
+      "distribution_id": "${CLOUDFRONT_DISTRIBUTION_ID}",
+      "domain": "${CLOUDFRONT_DOMAIN}"
+    }
+  },
+  "waf": {
+    "web_acl_id": "${WAF_WEB_ACL_ID}",
+    "enabled": true
+  },
+  "timeouts": {
+    "health": 60,
+    "cors": 30,
+    "ssl": 30
+  },
+  "sla": {
+    "uptime_requirement": 99.9,
+    "response_time_max": 2000,
+    "error_rate_max": 0.1
+  }
+}

@@ -1,0 +1,48 @@
+# Example Terraform variables file
+# Copy this to terraform.tfvars and modify the values
+
+# Basic Configuration
+aws_region   = "ca-central-1"
+project_name = "aetheria"
+environment  = "dev"
+
+# Domain Configuration
+domain_name     = "aetheria.example.com"
+api_domain_name = "api.aetheria.example.com"
+cdn_domain_name = "cdn.aetheria.example.com"
+
+# VPC Configuration
+vpc_cidr = "10.0.0.0/16"
+availability_zones = [
+  "ca-central-1a",
+  "ca-central-1b", 
+  "ca-central-1d"
+]
+
+# EKS Configuration
+kubernetes_version = "1.28"
+node_group_instance_types = ["t3.medium", "t3.large"]
+node_group_desired_size = 2
+node_group_min_size = 1
+node_group_max_size = 5
+
+# Security Configuration
+enable_waf = true
+allowed_cidr_blocks = [
+  "0.0.0.0/0"  # Restrict this in production to specific IP ranges
+]
+
+# Cost Optimization
+enable_spot_instances = false  # Set to true for cost savings in non-prod
+cloudfront_price_class = "PriceClass_100"  # Use PriceClass_All for global distribution
+
+# Lifecycle Configuration
+media_bucket_lifecycle_days = 30
+logs_bucket_lifecycle_days = 90
+
+# Monitoring
+enable_vpc_flow_logs = true
+enable_eks_logging = true
+
+# Backup
+backup_retention_days = 30

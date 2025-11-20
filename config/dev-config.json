@@ -1,0 +1,45 @@
+{
+  "environment": "development",
+  "services": {
+    "auth": {
+      "url": "http://localhost:3001",
+      "healthPath": "/health",
+      "healthAuth": false
+    },
+    "streaming": {
+      "url": "http://localhost:3002", 
+      "healthPath": "/health",
+      "healthAuth": false
+    },
+    "coreapi": {
+      "url": "http://localhost:3003",
+      "healthPath": "/health", 
+      "healthAuth": false
+    },
+    "chat": {
+      "url": "http://localhost:3004",
+      "healthPath": "/health",
+      "healthAuth": false
+    }
+  },
+  "ui": {
+    "url": "http://localhost:3000",
+    "origin": "http://localhost:3000"
+  },
+  "timeouts": {
+    "health": 10,
+    "cors": 5
+  },
+  "docker": {
+    "compose_file": "docker-compose.yml",
+    "check_containers": true
+  },
+  "environment_files": [
+    ".env",
+    "web/.env",
+    "api/authService/.env",
+    "api/streamingService/.env",
+    "api/coreAPIService/.env", 
+    "api/chatService/.env"
+  ]
+}
