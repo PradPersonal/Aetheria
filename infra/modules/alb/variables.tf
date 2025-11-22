@@ -1,3 +1,8 @@
+variable "enable_alb_waf" {
+  description = "Whether to enable WAF association for ALB."
+  type        = bool
+  default     = false
+}
 variable "name" {
   description = "Name prefix for resources"
   type        = string

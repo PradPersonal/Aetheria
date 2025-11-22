@@ -1,5 +1,6 @@
 # Stage 1: Install dependencies
 FROM node:20-alpine AS dependencies
+RUN apk add --no-cache curl
 
 WORKDIR /app
 
@@ -13,6 +14,8 @@ RUN npm ci --only=production && npm cache clean --force
 FROM node:20-alpine AS production
 
 WORKDIR /app
+# Install curl for healthcheck
+RUN apk add --no-cache curl
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -35,7 +38,10 @@ EXPOSE 3000
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
+  CMD curl -f http://localhost:3000/health || exit 1
+
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+#    CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
 # Start the application
 CMD ["node", "index.js"]

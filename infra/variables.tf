@@ -21,19 +21,19 @@ variable "environment" {
 variable "domain_name" {
   description = "Domain name for the application"
   type        = string
-  default     = "aetheria.example.com"
+  default     = "aetheria.prad.com"
 }
 
 variable "api_domain_name" {
   description = "API domain name"
   type        = string
-  default     = "api.aetheria.example.com"
+  default     = "api.aetheria.prad.com"
 }
 
 variable "cdn_domain_name" {
   description = "CDN domain name for media"
   type        = string
-  default     = "cdn.aetheria.example.com"
+  default     = "cdn.aetheria.prad.com"
 }
 
 # VPC Configuration
@@ -46,7 +46,7 @@ variable "vpc_cidr" {
 variable "availability_zones" {
   description = "Availability zones for the region"
   type        = list(string)
-  default     = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  default     = ["ca-central-1a", "ca-central-1b", "ca-central-1c"]
 }
 
 # EKS Configuration
@@ -59,7 +59,7 @@ variable "kubernetes_version" {
 variable "node_group_instance_types" {
   description = "Instance types for EKS node groups"
   type        = list(string)
-  default     = ["t3.medium", "t3.large"]
+  default     = ["t3.medium", "t3.micro"]
 }
 
 variable "node_group_desired_size" {
@@ -159,4 +159,29 @@ variable "backup_retention_days" {
   description = "Number of days to retain backups"
   type        = number
   default     = 30
+}
+variable "blocked_countries" {
+  description = "blocked countries"
+  type        = list(string)
+  default     = ["us-west-1"]
+}
+variable "enable_waf_logging" {
+  description = "Enable waf logging"
+  type        = bool
+  default     = false
+}
+variable "enable_alb_logging" {
+  description = "Enable alb logging"
+  type        = bool
+  default     = false
+}
+variable "enable_cloudfront_logging" {
+  description = "Enable cloudfront logging"
+  type        = bool
+  default     = false
+}
+variable "enable_signed_urls" {
+  description = "Enable signed logging"
+  type        = bool
+  default     = false
 }

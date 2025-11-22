@@ -66,6 +66,18 @@ variable "enable_health_check" {
   default     = false
 }
 
+variable "create_alb_records" {
+  description = "Create Route53 records pointing to ALB"
+  type        = bool
+  default     = true
+}
+
+variable "create_cloudfront_records" {
+  description = "Create Route53 records pointing to CloudFront"
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)

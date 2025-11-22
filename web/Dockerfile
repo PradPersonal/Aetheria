@@ -9,8 +9,8 @@ RUN npm ci --silent || npm install --silent
 
 # copy sources and build
 COPY . .
-ARG NODE_ENV=production
-ENV NODE_ENV=$NODE_ENV
+# ARG NODE_ENV=production
+# ENV NODE_ENV=$NODE_ENV
 RUN npm run build
 
 # --- Production stage ---
@@ -26,10 +26,10 @@ COPY --from=builder /app/build /usr/share/nginx/html
 
 # Copy environment template and entrypoint script
 COPY public/env.template.js /usr/share/nginx/html/env.template.js
-COPY public/docker-entrypoint.sh /docker-entrypoint.sh
+COPY ./public/docker-entrypoint.sh ./docker-entrypoint.sh
 
 # Make entrypoint script executable
-RUN chmod +x /docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 # Set default environment variables
 ENV REACT_APP_API_URL=http://localhost:3001/api \
@@ -45,5 +45,11 @@ ENV REACT_APP_API_URL=http://localhost:3001/api \
     REACT_APP_ENABLE_DEBUG=false
 
 # Use custom entrypoint for runtime environment injection
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ ENTRYPOINT ["./docker-entrypoint.sh"]
+# ENTRYPOINT ["/bin/sh", "-c", "if [ -f /docker-entrypoint.sh ]; then exec /docker-entrypoint.sh \"$@\"; else exec \"$@\"; fi", "--"]
+
+# COPY --from=builder /app/build .
+
+# EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]

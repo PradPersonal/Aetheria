@@ -103,7 +103,7 @@ resource "aws_acm_certificate_validation" "cloudfront" {
 
 # Route 53 record for main domain (will point to ALB)
 resource "aws_route53_record" "main" {
-  count   = var.alb_dns_name != "" ? 1 : 0
+  count   = var.create_alb_records ? 1 : 0
   zone_id = aws_route53_zone.main.zone_id
   name    = var.domain_name
   type    = "A"
@@ -113,11 +113,13 @@ resource "aws_route53_record" "main" {
     zone_id                = var.alb_zone_id
     evaluate_target_health = true
   }
+
+  depends_on = [aws_acm_certificate_validation.alb]
 }
 
 # Route 53 record for API domain (will point to ALB)
 resource "aws_route53_record" "api" {
-  count   = var.alb_dns_name != "" && var.api_domain_name != "" ? 1 : 0
+  count   = var.create_alb_records && var.api_domain_name != "" ? 1 : 0
   zone_id = aws_route53_zone.main.zone_id
   name    = var.api_domain_name
   type    = "A"
@@ -127,11 +129,13 @@ resource "aws_route53_record" "api" {
     zone_id                = var.alb_zone_id
     evaluate_target_health = true
   }
+
+  depends_on = [aws_acm_certificate_validation.alb]
 }
 
 # Route 53 record for CDN domain (will point to CloudFront)
 resource "aws_route53_record" "cdn" {
-  count   = var.cloudfront_domain_name != "" && var.cloudfront_hosted_zone_id != "" ? 1 : 0
+  count   = var.create_cloudfront_records && var.cdn_domain_name != "" ? 1 : 0
   zone_id = aws_route53_zone.main.zone_id
   name    = var.cdn_domain_name
   type    = "A"
@@ -141,6 +145,8 @@ resource "aws_route53_record" "cdn" {
     zone_id                = var.cloudfront_hosted_zone_id
     evaluate_target_health = false
   }
+
+  depends_on = [aws_acm_certificate_validation.cloudfront]
 }
 
 # Health check for main domain
@@ -153,7 +159,7 @@ resource "aws_route53_health_check" "main" {
   failure_threshold               = "3"
   request_interval                = "30"
   search_string                   = "OK"
-  cloudwatch_logs_region          = var.aws_region
+  # cloudwatch_logs_region          = var.aws_region
   enable_sni                      = true
   measure_latency                 = true
   invert_healthcheck             = false

@@ -5,27 +5,26 @@ const setupDatabase = async () => {
   try {
     const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/streamingapp';
     console.log('Connecting to MongoDB...');
-    
-    await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+
+    await mongoose.connect(uri);
+
+    // Ensure connection is fully open
+    await mongoose.connection.asPromise();
 
     console.log('Connected to MongoDB');
 
-    // Check if users collection exists and create it if it doesn't
-    const collections = await mongoose.connection.db.listCollections().toArray();
+    const db = mongoose.connection.db;
+    const collections = await db.listCollections().toArray();
     const hasUsersCollection = collections.some(col => col.name === 'users');
-    
+
     if (!hasUsersCollection) {
       console.log('Creating users collection...');
-      await mongoose.connection.db.createCollection('users');
+      await db.createCollection('users');
       console.log('Users collection created');
     } else {
       console.log('Users collection already exists');
     }
 
-    // Create indexes
     await User.collection.createIndex({ email: 1 }, { unique: true });
     console.log('Email index created');
 

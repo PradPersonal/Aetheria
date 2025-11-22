@@ -83,6 +83,8 @@ module "route53" {
   cloudfront_domain_name              = module.cloudfront.cloudfront_domain_name
   cloudfront_hosted_zone_id           = module.cloudfront.cloudfront_hosted_zone_id
   enable_health_check                 = var.environment == "prod"
+  create_alb_records                  = true
+  create_cloudfront_records           = true
   tags                                = local.common_tags
 }
 

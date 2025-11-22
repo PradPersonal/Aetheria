@@ -48,6 +48,10 @@ app.use('/api/health', healthRoutes);
 app.use('/api/streaming', streamingRoutes);
 app.use('/api/admin', adminRoutes);
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

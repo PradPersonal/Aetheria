@@ -4,9 +4,9 @@ project_name = "aetheria"
 environment  = "dev"
 
 # Use example domains for development
-domain_name     = "dev.aetheria.example.com"
-api_domain_name = "api-dev.aetheria.example.com"
-cdn_domain_name = "cdn-dev.aetheria.example.com"
+domain_name     = "dev.aetheria.prad.com"
+api_domain_name = "api-dev.aetheria.prad.com"
+cdn_domain_name = "cdn-dev.aetheria.prad.com"
 
 # Smaller VPC for development
 vpc_cidr = "10.0.0.0/16"
@@ -33,3 +33,9 @@ allowed_cidr_blocks = ["0.0.0.0/0"]
 # Monitoring (reduced for cost)
 enable_vpc_flow_logs = false
 enable_eks_logging = true
+
+blocked_countries = ["us-west-1"]
+enable_waf_logging = true
+enable_alb_logging = true
+enable_cloudfront_logging = true
+enable_signed_urls = true
