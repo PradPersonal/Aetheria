@@ -129,5 +129,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 infra/.terraform
+infra/.terraform.lock.hcl
 infra/*.tfstate*
 helperfiles
