@@ -1,37 +1,61 @@
 import axios from 'axios';
+import config from '../config';
 
-const API_URL = 'http://localhost:3001/api'; // authService URL
-
+// Create API instances for different services
 export const api = axios.create({
-  baseURL: API_URL,
+  baseURL: config.apiUrl,
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: true,
 });
 
-// Add a request interceptor to add the auth token to requests
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+export const streamingApi = axios.create({
+  baseURL: config.streamingUrl,
+  headers: {
+    'Content-Type': 'application/json',
   },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+  withCredentials: true,
+});
 
-// Add a response interceptor to handle auth errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
+export const chatApi = axios.create({
+  baseURL: config.chatUrl,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true,
+});
+
+export const coreApi = axios.create({
+  baseURL: config.coreApiUrl,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true,
+});
+
+// Common request interceptor for all API instances
+const requestInterceptor = (config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+  return config;
+};
+
+// Common response interceptor for all API instances
+const responseInterceptor = (response) => response;
+const responseErrorInterceptor = (error) => {
+  if (error.response?.status === 401) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  }
+  return Promise.reject(error);
+};
+
+// Apply interceptors to all API instances
+[api, streamingApi, chatApi, coreApi].forEach(apiInstance => {
+  apiInstance.interceptors.request.use(requestInterceptor, (error) => Promise.reject(error));
+  apiInstance.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
+});

@@ -7,6 +7,11 @@ const {
   getVideoDetails
 } = require('../controllers/streaming.controller');
 
+// Example base route
+router.get('/', (req, res) => {
+  res.json({ message: 'Streaming service API root' });
+});
+
 // Stream video
 router.get('/stream', streamVideo);
 

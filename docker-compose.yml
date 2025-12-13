@@ -1,0 +1,262 @@
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: aetheria-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: streamingapp
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - aetheria-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Redis (for chat and caching)
+  redis:
+    image: redis:7.0-alpine
+    container_name: aetheria-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - aetheria-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Authentication Service
+  auth-service:
+    build:
+      context: ./api/authService
+      dockerfile: Dockerfile
+    container_name: aetheria-auth-service
+    ports:
+      - "3001:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - MONGO_URI=mongodb://admin:password123@mongodb:27017/streamingapp?authSource=admin
+      - JWT_SECRET=your-super-secret-jwt-key-for-development
+      - JWT_EXPIRES_IN=24h
+      - CORS_ORIGIN=http://localhost
+      - SERVICE_NAME=Authentication Service
+      - SERVICE_VERSION=1.0.0
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - aetheria-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Streaming Service
+  streaming-service:
+    build:
+      context: ./api/streamingService
+      dockerfile: Dockerfile
+    container_name: aetheria-streaming-service
+    ports:
+      - "3002:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://admin:password123@mongodb:27017/streamingapp?authSource=admin
+      - CORS_ORIGIN=http://localhost
+      - SERVICE_NAME=Streaming Service
+      - SERVICE_VERSION=1.0.0
+      # AWS S3 (use minio for local development)
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin123
+      - AWS_REGION=us-east-1
+      - AWS_S3_BUCKET=aetheria-videos
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - aetheria-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Chat Service
+  chat-service:
+    build:
+      context: ./api/chatService
+      dockerfile: Dockerfile
+    container_name: aetheria-chat-service
+    ports:
+      - "3003:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - CORS_ORIGIN=http://localhost
+      - SERVICE_NAME=Chat Service
+      - SERVICE_VERSION=1.0.0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - aetheria-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Core API Service
+  core-api-service:
+    build:
+      context: ./api/coreAPIService
+      dockerfile: Dockerfile
+    container_name: aetheria-core-api-service
+    ports:
+      - "3004:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - CORS_ORIGIN=http://localhost
+      - SERVICE_NAME=Core API Service
+      - SERVICE_VERSION=1.0.0
+    networks:
+      - aetheria-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # MinIO (S3 compatible storage for local development)
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: aetheria-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - aetheria-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Web Frontend
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: aetheria-web
+    ports:
+      - "80:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3001/api
+      - REACT_APP_STREAMING_URL=http://localhost:3002/api
+      - REACT_APP_CHAT_URL=http://localhost:3003/api
+      - REACT_APP_CORE_API_URL=http://localhost:3004/api
+      - REACT_APP_WS_URL=ws://localhost:3003
+      - REACT_APP_APP_NAME=Aetheria (Local)
+      - REACT_APP_VERSION=1.0.0-local
+      - REACT_APP_ENVIRONMENT=development
+      - REACT_APP_ENABLE_CHAT=true
+      - REACT_APP_ENABLE_ANALYTICS=false
+      - REACT_APP_ENABLE_DEBUG=true
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      streaming-service:
+        condition: service_healthy
+      chat-service:
+        condition: service_healthy
+      core-api-service:
+        condition: service_healthy
+    networks:
+      - aetheria-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Database Setup and Seeding Service
+  db-setup:
+    build:
+      context: ./api/authService
+      dockerfile: Dockerfile
+    container_name: aetheria-db-setup
+    environment:
+      - MONGO_URI=mongodb://admin:password123@mongodb:27017/streamingapp?authSource=admin
+      - NODE_ENV=development
+    command: ["node", "scripts/setupDb.js"]
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - aetheria-network
+    restart: "no"
+
+  # Video Data Seeding Service
+  video-seeder:
+    build:
+      context: ./api/streamingService
+      dockerfile: Dockerfile
+    container_name: aetheria-video-seeder
+    environment:
+      - MONGO_URI=mongodb://admin:password123@mongodb:27017/streamingapp?authSource=admin
+      - NODE_ENV=development
+    command: ["node", "scripts/seedVideos.js"]
+    depends_on:
+      streaming-service:
+        condition: service_healthy
+      db-setup:
+        condition: service_completed_successfully
+    networks:
+      - aetheria-network
+    restart: "no"
+
+networks:
+  aetheria-network:
+    driver: bridge
+    name: aetheria-network
+
+volumes:
+  mongodb_data:
+    name: aetheria_mongodb_data
+  redis_data:
+    name: aetheria_redis_data
+  minio_data:
+    name: aetheria_minio_data

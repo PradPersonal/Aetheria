@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { adminAuth } = require('../../authService/middleware/adminAuth');
+const { adminAuth } = require('../common/middleware/adminAuth');
 const { Video } = require('../models/video.model');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
